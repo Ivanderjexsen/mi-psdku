@@ -1,15 +1,15 @@
 services:
   review-service:
-    build: .
+    build: ./review-service
     ports:
       - "3002:3002"
     environment:
-      - HOST=0.0.0.0
-      - PORT=3002
-      - FLASK_DEBUG=1
-      - MONGO_URI=mongodb://appuser:apppassword@review-db:27017/?authSource=admin
-      - MONGO_DB_NAME=reviewdb
-      - PRODUCT_SERVICE_URL=http://product-service:3000
+      HOST: 0.0.0.0
+      PORT: 3002
+      FLASK_DEBUG: "1"
+      MONGO_URI: mongodb://appuser:apppassword@review-db:27017/?authSource=admin
+      MONGO_DB_NAME: reviewdb
+      PRODUCT_SERVICE_URL: http://product-service:3000
     depends_on:
       review-db:
         condition: service_healthy
@@ -19,8 +19,8 @@ services:
   review-db:
     image: mongo:7
     environment:
-      - MONGO_INITDB_ROOT_USERNAME=appuser
-      - MONGO_INITDB_ROOT_PASSWORD=apppassword
+      MONGO_INITDB_ROOT_USERNAME: appuser
+      MONGO_INITDB_ROOT_PASSWORD: apppassword
     ports:
       - "27017:27017"
     volumes:
@@ -33,14 +33,14 @@ services:
       timeout: 5s
 
   product-service:
-    build: ../product-service
+    build: ./product-service
     ports:
       - "3000:3000"
     environment:
-      - DB_HOST=product-db
-      - DB_USER=appuser
-      - DB_PASSWORD=apppassword
-      - DB_NAME=productdb
+      DB_HOST: product-db
+      DB_USER: appuser
+      DB_PASSWORD: apppassword
+      DB_NAME: productdb
     depends_on:
       product-db:
         condition: service_healthy
@@ -48,15 +48,15 @@ services:
   product-db:
     image: mysql:8.0
     environment:
-      - MYSQL_ROOT_PASSWORD=rootpassword
-      - MYSQL_DATABASE=productdb
-      - MYSQL_USER=appuser
-      - MYSQL_PASSWORD=apppassword
+      MYSQL_ROOT_PASSWORD: rootpassword
+      MYSQL_DATABASE: productdb
+      MYSQL_USER: appuser
+      MYSQL_PASSWORD: apppassword
     ports:
       - "3306:3306"
     volumes:
       - product-db-data:/var/lib/mysql
-      - ../product-service/database/init.sql:/docker-entrypoint-initdb.d/init.sql
+      - ./product-service/database/init.sql:/docker-entrypoint-initdb.d/init.sql:ro
     healthcheck:
       test: ["CMD-SHELL", "mysqladmin ping --host=localhost --user=root --password=rootpassword"]
       interval: 10s
@@ -64,6 +64,92 @@ services:
       start_period: 30s
       timeout: 5s
 
+  cart-db:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_DB: cartdb
+      POSTGRES_USER: appuser
+      POSTGRES_PASSWORD: apppassword
+    ports:
+      - "5433:5432"
+    volumes:
+      - cart-db-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U appuser -d cartdb"]
+      interval: 10s
+      retries: 5
+      start_period: 10s
+      timeout: 5s
+
+  cart-service:
+    build: ./cart-service
+    ports:
+      - "3001:3001"
+    environment:
+      APP_ENV: local
+      DB_CONNECTION: pgsql
+      DB_HOST: cart-db
+      DB_PORT: 5432
+      DB_DATABASE: cartdb
+      DB_USERNAME: appuser
+      DB_PASSWORD: apppassword
+      LOG_CHANNEL: stderr
+    command: php artisan serve --host=0.0.0.0 --port=3001
+    depends_on:
+      cart-db:
+        condition: service_healthy
+
+  order-db:
+    image: mysql:8.0
+    environment:
+      MYSQL_ROOT_PASSWORD: rootpassword
+      MYSQL_DATABASE: orderdb
+      MYSQL_USER: appuser
+      MYSQL_PASSWORD: apppassword
+    ports:
+      - "3307:3306"
+    volumes:
+      - order-db-data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD-SHELL", "mysqladmin ping --host=localhost --user=root --password=rootpassword"]
+      interval: 10s
+      retries: 5
+      start_period: 30s
+      timeout: 5s
+
+  order-service:
+    build: ./order-service
+    ports:
+      - "3003:80"
+    environment:
+      APP_ENV: production
+      APP_DEBUG: "false"
+      APP_KEY: "${ORDER_APP_KEY}"
+      DB_CONNECTION: mysql
+      DB_HOST: order-db
+      DB_PORT: 3306
+      DB_DATABASE: orderdb
+      DB_USERNAME: appuser
+      DB_PASSWORD: apppassword
+      SESSION_DRIVER: file
+      CACHE_STORE: file
+      QUEUE_CONNECTION: sync
+      CART_SERVICE_URL: http://cart-service:3001
+      PRODUCT_SERVICE_URL: http://product-service:3000
+      LOG_CHANNEL: stderr
+    depends_on:
+      order-db:
+        condition: service_healthy
+      cart-service:
+        condition: service_started
+      product-service:
+        condition: service_started
+    command: >
+      sh -c "php artisan migrate --force &&
+             apache2-foreground"
+
 volumes:
   review-db-data:
   product-db-data:
+  cart-db-data:
+  order-db-data:
