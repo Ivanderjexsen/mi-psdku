@@ -18,6 +18,9 @@ class OrderController extends Controller
     ) {
     }
 
+    /**
+     * Membuat pesanan baru melalui checkout.
+     */
     public function store(StoreOrderRequest $request): JsonResponse
     {
         $userId = (int) $request->validated()['user_id'];
@@ -29,11 +32,13 @@ class OrderController extends Controller
                 'message' => 'Pesanan berhasil dibuat.',
                 'data' => $order,
             ], 201);
+
         } catch (CheckoutConflictException $exception) {
             return response()->json([
                 'message' => $exception->getMessage(),
                 'data' => null,
             ], 409);
+
         } catch (DownstreamServiceException $exception) {
             Log::error('Layanan pendukung gagal saat checkout.', [
                 'user_id' => $userId,
@@ -44,6 +49,7 @@ class OrderController extends Controller
                 'message' => 'Layanan pendukung sedang tidak tersedia.',
                 'data' => null,
             ], 503);
+
         } catch (QueryException $exception) {
             Log::error('Database gagal saat checkout.', [
                 'user_id' => $userId,
@@ -54,6 +60,7 @@ class OrderController extends Controller
                 'message' => 'Terjadi kesalahan saat menyimpan pesanan.',
                 'data' => null,
             ], 500);
+
         } catch (Throwable $exception) {
             Log::error('Kesalahan tidak terduga saat checkout.', [
                 'user_id' => $userId,
@@ -61,15 +68,15 @@ class OrderController extends Controller
             ]);
 
             return response()->json([
-                'message' => config('app.debug')
-                    ? $exception->getMessage()
-                    : 'Terjadi kesalahan internal.',
+                'message' => 'Terjadi kesalahan internal.',
                 'data' => null,
             ], 500);
         }
     }
 
-    
+    /**
+     * Mengambil detail pesanan berdasarkan ID.
+     */
     public function show(string $id): JsonResponse
     {
         if (! ctype_digit($id) || (int) $id < 1) {
@@ -79,24 +86,39 @@ class OrderController extends Controller
             ], 404);
         }
 
-        $order = $this->orderService->getOrderById((int) $id);
+        try {
+            $order = $this->orderService->getOrderById((int) $id);
 
-        if ($order === null) {
+            if ($order === null) {
+                return response()->json([
+                    'message' => 'Pesanan tidak ditemukan.',
+                    'data' => null,
+                ], 404);
+            }
+
             return response()->json([
-                'message' => 'Pesanan tidak ditemukan.',
-                'data' => null,
-            ], 404);
-        }
+                'message' => 'Detail pesanan berhasil diambil.',
+                'data' => $order,
+            ], 200);
 
-        return response()->json([
-            'message' => 'Detail pesanan berhasil diambil.',
-            'data' => $order,
-        ], 200);
+        } catch (Throwable $exception) {
+            Log::error('Gagal mengambil detail pesanan.', [
+                'order_id' => (int) $id,
+                'exception' => $exception->getMessage(),
+            ]);
+
+            return response()->json([
+                'message' => 'Terjadi kesalahan saat mengambil detail pesanan.',
+                'data' => null,
+            ], 500);
+        }
     }
 
-    public function history(
-        string $userId
-    ): JsonResponse {
+    /**
+     * Mengambil riwayat pesanan berdasarkan ID pengguna.
+     */
+    public function history(string $userId): JsonResponse
+    {
         if (! ctype_digit($userId) || (int) $userId < 1) {
             return response()->json([
                 'message' => 'Pengguna tidak valid.',
@@ -120,18 +142,33 @@ class OrderController extends Controller
             ], 422);
         }
 
-        $orders = $this->orderService->getOrdersByUser(
-            (int) $userId,
-            $status
-        );
+        try {
+            $orders = $this->orderService->getOrdersByUser(
+                (int) $userId,
+                $status
+            );
 
-        return response()->json([
-            'message' => 'Riwayat pesanan berhasil diambil.',
-            'data' => $orders,
-        ], 200);
+            return response()->json([
+                'message' => 'Riwayat pesanan berhasil diambil.',
+                'data' => $orders,
+            ], 200);
+
+        } catch (Throwable $exception) {
+            Log::error('Gagal mengambil riwayat pesanan.', [
+                'user_id' => (int) $userId,
+                'exception' => $exception->getMessage(),
+            ]);
+
+            return response()->json([
+                'message' => 'Terjadi kesalahan saat mengambil riwayat pesanan.',
+                'data' => null,
+            ], 500);
+        }
     }
-    
-    
+
+    /**
+     * Memproses pembayaran pesanan.
+     */
     public function pay(string $id): JsonResponse
     {
         if (! ctype_digit($id) || (int) $id < 1) {
@@ -155,11 +192,13 @@ class OrderController extends Controller
                 'message' => 'Pesanan berhasil dibayar.',
                 'data' => $order,
             ], 200);
+
         } catch (CheckoutConflictException $exception) {
             return response()->json([
                 'message' => $exception->getMessage(),
                 'data' => null,
             ], 409);
+
         } catch (Throwable $exception) {
             Log::error('Gagal memproses pembayaran pesanan.', [
                 'order_id' => (int) $id,
@@ -167,12 +206,9 @@ class OrderController extends Controller
             ]);
 
             return response()->json([
-                'message' => config('app.debug')
-                    ? $exception->getMessage()
-                    : 'Terjadi kesalahan internal.',
+                'message' => 'Terjadi kesalahan saat memproses pembayaran.',
                 'data' => null,
             ], 500);
         }
     }
-
 }
