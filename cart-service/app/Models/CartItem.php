@@ -1,17 +1,22 @@
-<?php
+﻿<?php
 
 namespace App\Models;
 
-use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\Model;
 
-class CartItem extends Model        
+class CartItem extends Model
 {
     protected $table = 'cart_items';
-    protected $fillable = ['user_id', 'product_id', 'quantity'];
 
-    public function scopeByUserId(Builder $query, $userId)
+    protected $fillable = [
+        'user_id',
+        'product_id',
+        'quantity',
+    ];
+
+    public static function byUserId(int $userId): Builder
     {
-        return $query->where('user_id', $userId)->latest();
+        return static::query()->where('user_id', $userId);
     }
 }

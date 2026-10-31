@@ -1,3 +1,4 @@
+
 services:
   cart-service:
     build: .
@@ -15,6 +16,8 @@ services:
     depends_on:
       cart-db:
         condition: service_healthy
+    networks:
+      - mi-psdku_default
 
   cart-db:
     image: postgres:16-alpine
@@ -31,6 +34,12 @@ services:
       interval: 10s
       retries: 5
       timeout: 5s
+    networks:
+      - mi-psdku_default
 
 volumes:
   cart-db-data:
+
+networks:
+  mi-psdku_default:
+    external: true

@@ -15,7 +15,7 @@ class CartItemService
 
     public function getCart(int $userId)
     {
-        $items = CartItem::forUser($userId)->get();
+        $items = CartItem::where('user_id', $userId)->get();
 
         return [
             'user_id' => $userId,

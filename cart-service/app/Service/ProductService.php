@@ -1,4 +1,4 @@
-<?php 
+<?php
 
 namespace App\Service;
 
@@ -11,24 +11,21 @@ class ProductService
     public function getProduct(int $productId): ?array
     {
         try {
-            $response = Http::baseUrl(config('services.product.url'))
+            $response = Http::baseUrl(config('services.product_service.url'))
                 ->get("/products/{$productId}");
-                
+
             if ($response->successful() && isset($response->json()['data'])) {
-                return $response->json() ['data'];
+                return $response->json()['data'];
             }
 
             return null;
         } catch (Throwable $e) {
-            Log::error('Gagal mengambil data produk',
-                [
-                    'product_id' => $productId,
-                    'error' => $e->getMessage(),
-                ]
-            );
+            Log::error('Gagal mengambil data produk', [
+                'product_id' => $productId,
+                'error' => $e->getMessage(),
+            ]);
 
             return null;
         }
     }
-    
 }

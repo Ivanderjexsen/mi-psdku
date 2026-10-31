@@ -3,6 +3,15 @@
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\CartController;
 
+Route::post('/debug-request', function (\Illuminate\Http\Request $request) {
+    return response()->json([
+        'content_type' => $request->header('Content-Type'),
+        'raw_body' => $request->getContent(),
+        'all_input' => $request->all(),
+        'json_input' => $request->json()->all(),
+    ]);
+});
+
 // Menampilkan keranjang
 Route::get('/carts/{userId}', [CartController::class, 'show'])
     ->whereNumber('userId');

@@ -13,43 +13,24 @@ CREATE TABLE IF NOT EXISTS products (
 CREATE INDEX products_name_index ON products (name);
 
 INSERT INTO products (name, description, price, stock, image) VALUES
-
 (
-    'Laptop kerja 14 inch',
-    'Laptop ringkas untuk kebutuhan kerja dan kuliah',
-    8750000.00,
-    6,
+    'Keyboard Mekanikal',
+    'Keyboard mekanikal untuk kebutuhan komputer',
+    450000.00,
+    25,
     'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNkYPhfDwAChwGA60e6kgAAAABJRU5ErkJggg=='
 ),
-
 (
-    'Webcam full HD',
-    'Kamera full HD untuk rapat dan pembelajaran online',
-    425000.00,
-    14,
+    'Mouse Wireless',
+    'Mouse wireless untuk kebutuhan komputer',
+    150000.00,
+    40,
     'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNkYPhfDwAChwGA60e6kgAAAABJRU5ErkJggg=='
 ),
-
 (
-    'USB-C hub 6-in-1',
-    'Hub USB-C dengan HDMI, USB, dan pembaca kartu',
-    315000.00,
-    18,
-    'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNkYPhfDwAChwGA60e6kgAAAABJRU5ErkJggg=='
-),
-
-(
-    'SSD eksternal 1TB',
-    'Penyimpanan eksternal cepat dengan kapasitas 1TB',
-    1125000.00,
-    9,
-    'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNkYPhfDwAChwGA60e6kgAAAABJRU5ErkJggg=='
-),
-
-(
-    'Stand laptop aluminium',
-    'Stand laptop ergonomis dengan bahan aluminium',
-    275000.00,
-    12,
+    'Monitor 24 Inch',
+    'Monitor berukuran 24 inch',
+    1500000.00,
+    10,
     'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNkYPhfDwAChwGA60e6kgAAAABJRU5ErkJggg=='
 );
