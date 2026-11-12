@@ -28,8 +28,11 @@ def _parse_id(review_id):
 
 # Semua review satu produk beserta ringkasan ratingnya.
 def get_product_reviews(product_id):
+    # Mengubah product_id dari URL (string) menjadi integer.
+    product_id = int(product_id)
+
     return {
-        "product_id": product_id,
+        "product_id": str(product_id),
         "summary": review_model.rating_summary(product_id),
         "reviews": review_model.find_by_product(product_id),
     }
