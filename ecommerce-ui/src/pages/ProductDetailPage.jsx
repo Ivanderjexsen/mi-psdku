@@ -1,5 +1,3 @@
-// Halaman detail: informasi produk, tombol masuk keranjang,
-// dan daftar review.
 
 import { useState } from 'react'
 import { Link, useParams } from 'react-router-dom'
@@ -20,22 +18,18 @@ export default function ProductDetailPage({ userId }) {
   )
 
   const [quantity, setQuantity] = useState('1')
-  const [cartMessage, setCartMessage] = useState(null)
 
   async function handleAddToCart() {
     const amount = Math.max(1, Number(quantity) || 1)
 
     try {
       await addToCart(userId, Number(id), amount)
-      setCartMessage({
-        type: 'success',
-        text: 'Produk masuk ke keranjang.',
-      })
+
+      window.alert(
+        `${data.product.name} berhasil ditambahkan ke keranjang!`,
+      )
     } catch (err) {
-      setCartMessage({
-        type: 'error',
-        text: describeError(err),
-      })
+      window.alert(describeError(err))
     }
   }
 
@@ -67,6 +61,7 @@ export default function ProductDetailPage({ userId }) {
 
             <div className="add-cart">
               <input
+                className="product-quantity"
                 type="number"
                 min="1"
                 value={quantity}
@@ -77,18 +72,6 @@ export default function ProductDetailPage({ userId }) {
                 Tambah ke keranjang
               </button>
             </div>
-
-            {cartMessage && (
-              <p
-                className={
-                  cartMessage.type === 'success'
-                    ? 'alert alert-success'
-                    : 'alert alert-error'
-                }
-              >
-                {cartMessage.text}
-              </p>
-            )}
 
             <hr />
 

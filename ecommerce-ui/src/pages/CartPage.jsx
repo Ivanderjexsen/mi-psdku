@@ -1,4 +1,3 @@
-// Halaman keranjang: isi keranjang beserta detail produk.
 
 import { getCartDetail } from '../api/aggregate'
 import { clearCart, removeCartItem, updateCartItem } from '../api/cartApi'
@@ -12,13 +11,43 @@ export default function CartPage({ userId }) {
     [userId],
   )
 
-  async function run(action) {
+  async function run(action, successMessage) {
     try {
       await action()
       reload()
+
+      if (successMessage) {
+        window.alert(successMessage)
+      }
     } catch (err) {
-      alert(describeError(err))
+      window.alert(describeError(err))
     }
+  }
+
+  function handleRemove(item) {
+    const confirmed = window.confirm(
+      `Apakah kamu yakin ingin menghapus "${item.product?.name || 'produk ini'}" dari keranjang?`,
+    )
+
+    if (!confirmed) return
+
+    run(
+      () => removeCartItem(item.id),
+      'Produk berhasil dihapus dari keranjang.',
+    )
+  }
+
+  function handleClearCart() {
+    const confirmed = window.confirm(
+      'Apakah kamu yakin ingin mengosongkan seluruh keranjang belanja?',
+    )
+
+    if (!confirmed) return
+
+    run(
+      () => clearCart(userId),
+      'Keranjang berhasil dikosongkan.',
+    )
   }
 
   return (
@@ -36,7 +65,7 @@ export default function CartPage({ userId }) {
                   <article className="cart-item" key={item.id}>
                     {item.product ? (
                       <>
-                        <div>
+                        <div className="cart-product">
                           <strong>{item.product.name}</strong>
                           <p className="muted">
                             {formatRupiah(item.product.price)}
@@ -44,6 +73,7 @@ export default function CartPage({ userId }) {
                         </div>
 
                         <input
+                          className="cart-quantity"
                           type="number"
                           min="1"
                           value={item.quantity}
@@ -63,10 +93,9 @@ export default function CartPage({ userId }) {
                     )}
 
                     <button
+                      className="cart-delete"
                       type="button"
-                      onClick={() =>
-                        run(() => removeCartItem(item.id))
-                      }
+                      onClick={() => handleRemove(item)}
                     >
                       Hapus
                     </button>
@@ -79,7 +108,7 @@ export default function CartPage({ userId }) {
 
                 <button
                   type="button"
-                  onClick={() => run(() => clearCart(userId))}
+                  onClick={handleClearCart}
                 >
                   Kosongkan keranjang
                 </button>
