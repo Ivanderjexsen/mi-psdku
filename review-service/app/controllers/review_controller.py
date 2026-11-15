@@ -76,8 +76,18 @@ def update(review_id):
 # DELETE /reviews/<review_id>
 def destroy(review_id):
     try:
-        review_service.delete_review(review_id)
+        user_id = request.args.get("user_id", type=int)
+        if user_id is None or user_id < 1:
+            raise ValidationError({
+                "user_id": [
+                    "Field user_id harus berupa angka bulat minimal 1"
+                ]
+            })
+
+        review_service.delete_review(review_id, user_id)
         return jsonify({"message": "Review berhasil dihapus"})
+    except ValidationError as error:
+        return _validation_response(error)
     except ReviewNotFoundError as error:
         return jsonify({"message": str(error)}), 404
     except Exception as error:

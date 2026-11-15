@@ -1,5 +1,3 @@
-// Formulir untuk menulis review.
-// Mengirim ke review-service lewat reviewApi.
 
 import { useState } from 'react'
 import { createReview } from '../api/reviewApi'
@@ -13,13 +11,25 @@ export default function ReviewForm({ productId, userId, onCreated }) {
 
   async function handleSubmit(event) {
     event.preventDefault()
+
+    if (submitting) return
+
     setSubmitting(true)
     setError(null)
 
     try {
-      await createReview({ productId, userId, rating, comment })
+      await createReview({
+        productId,
+        userId,
+        rating,
+        comment,
+      })
+
       setComment('')
-      onCreated()
+      setRating(5)
+
+      // Beri tahu halaman detail bahwa ulasan berhasil dibuat.
+      onCreated?.()
     } catch (err) {
       setError(err)
     } finally {
@@ -29,13 +39,14 @@ export default function ReviewForm({ productId, userId, onCreated }) {
 
   return (
     <form className="form" onSubmit={handleSubmit}>
-      <h3>Tulis review sebagai user {userId}</h3>
+      <h3>Tulis Ulasan</h3>
 
       <label>
         Rating
         <select
           value={rating}
           onChange={(e) => setRating(Number(e.target.value))}
+          disabled={submitting}
         >
           {[5, 4, 3, 2, 1].map((n) => (
             <option key={n} value={n}>
@@ -52,15 +63,19 @@ export default function ReviewForm({ productId, userId, onCreated }) {
           maxLength="1000"
           value={comment}
           onChange={(e) => setComment(e.target.value)}
+          disabled={submitting}
+          required
         />
       </label>
 
       {error && (
-        <p className="alert alert-error">{describeError(error)}</p>
+        <p className="alert alert-error">
+          {describeError(error)}
+        </p>
       )}
 
       <button type="submit" disabled={submitting}>
-        {submitting ? 'Mengirim...' : 'Kirim review'}
+        {submitting ? 'Mengirim...' : 'Kirim Ulasan'}
       </button>
     </form>
   )

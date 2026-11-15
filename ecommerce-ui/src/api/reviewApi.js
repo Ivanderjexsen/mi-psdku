@@ -17,3 +17,10 @@ export const createReview = ({ productId, userId, rating, comment }) =>
       comment,
     },
   }).then((res) => res.data);
+
+export const deleteReview = (reviewId, userId) =>
+  request(
+    REVIEW_URL,
+    `/reviews/${encodeURIComponent(reviewId)}?user_id=${encodeURIComponent(userId)}`,
+    { method: 'DELETE' },
+  ).then((res) => res.data);

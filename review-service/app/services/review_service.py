@@ -70,6 +70,6 @@ def update_review(review_id, data):
     return review
 
 
-def delete_review(review_id):
-    if not review_model.delete(_parse_id(review_id)):
+def delete_review(review_id, user_id):
+    if not review_model.delete(_parse_id(review_id), user_id):
         raise ReviewNotFoundError(review_id)

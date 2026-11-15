@@ -24,6 +24,19 @@ export default function CartPage({ userId }) {
     }
   }
 
+  function handleQuantityChange(item, change) {
+    const currentQuantity = Number(item.quantity) || 1
+    const stock = Number(item.product?.stock)
+    const hasStockLimit = Number.isFinite(stock) && stock >= 0
+
+    const newQuantity = currentQuantity + change
+    const maximum = hasStockLimit ? stock : Infinity
+
+    if (newQuantity < 1 || newQuantity > maximum) return
+
+    run(() => updateCartItem(item.id, newQuantity))
+  }
+
   function handleRemove(item) {
     const confirmed = window.confirm(
       `Apakah kamu yakin ingin menghapus "${item.product?.name || 'produk ini'}" dari keranjang?`,
@@ -51,7 +64,7 @@ export default function CartPage({ userId }) {
   }
 
   return (
-    <section>
+    <section className="cart-page">
       <h1>Keranjang Belanja</h1>
 
       <AsyncView loading={loading} error={error} onRetry={reload}>
@@ -61,46 +74,90 @@ export default function CartPage({ userId }) {
               <p className="muted">Keranjang masih kosong.</p>
             ) : (
               <>
-                {data.items.map((item) => (
-                  <article className="cart-item" key={item.id}>
-                    {item.product ? (
-                      <>
-                        <div className="cart-product">
-                          <strong>{item.product.name}</strong>
-                          <p className="muted">
-                            {formatRupiah(item.product.price)}
-                          </p>
+                <div className="cart-list">
+                  {data.items.map((item) => {
+                    const image = item.product?.image
+
+                    const imageSrc = image
+                      ? image.startsWith('data:')
+                        ? image
+                        : `data:image/jpeg;base64,${image}`
+                      : null
+
+                    const quantity = Number(item.quantity) || 1
+                    const stock = Number(item.product?.stock)
+                    const hasStockLimit = Number.isFinite(stock) && stock >= 0
+
+                    return (
+                      <article className="cart-item" key={item.id}>
+                        {item.product ? (
+                          <>
+                            <div className="cart-product-image-wrapper">
+                              {imageSrc ? (
+                                <img
+                                  src={imageSrc}
+                                  alt={item.product.name}
+                                  className="cart-product-image"
+                                />
+                              ) : (
+                                <div className="cart-image-placeholder">
+                                  Gambar tidak tersedia
+                                </div>
+                              )}
+                            </div>
+
+                            <div className="cart-product">
+                              <strong>{item.product.name}</strong>
+                              <p className="muted">
+                                {formatRupiah(item.product.price)}
+                              </p>
+                            </div>
+                          </>
+                        ) : (
+                          <p>Produk tidak tersedia</p>
+                        )}
+
+                        <div className="cart-item-actions">
+                          {item.product && (
+                            <div className="quantity-control cart-quantity-control">
+                              <button
+                                type="button"
+                                className="quantity-btn"
+                                onClick={() => handleQuantityChange(item, -1)}
+                                disabled={quantity <= 1}
+                                aria-label={`Kurangi jumlah ${item.product.name}`}
+                              >
+                                −
+                              </button>
+
+                              <span className="quantity-value">
+                                {quantity}
+                              </span>
+
+                              <button
+                                type="button"
+                                className="quantity-btn"
+                                onClick={() => handleQuantityChange(item, 1)}
+                                disabled={hasStockLimit && quantity >= stock}
+                                aria-label={`Tambah jumlah ${item.product.name}`}
+                              >
+                                +
+                              </button>
+                            </div>
+                          )}
+
+                          <button
+                            className="cart-delete"
+                            type="button"
+                            onClick={() => handleRemove(item)}
+                          >
+                            Hapus
+                          </button>
                         </div>
-
-                        <input
-                          className="cart-quantity"
-                          type="number"
-                          min="1"
-                          value={item.quantity}
-                          onChange={(e) => {
-                            const quantity = Number(e.target.value)
-
-                            if (quantity >= 1) {
-                              run(() =>
-                                updateCartItem(item.id, quantity),
-                              )
-                            }
-                          }}
-                        />
-                      </>
-                    ) : (
-                      <p>Produk tidak tersedia</p>
-                    )}
-
-                    <button
-                      className="cart-delete"
-                      type="button"
-                      onClick={() => handleRemove(item)}
-                    >
-                      Hapus
-                    </button>
-                  </article>
-                ))}
+                      </article>
+                    )
+                  })}
+                </div>
 
                 <p className="total">
                   Total: <strong>{formatRupiah(data.totalPrice)}</strong>

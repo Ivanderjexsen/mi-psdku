@@ -61,12 +61,12 @@ def update(object_id, fields):
     return _serialize(doc)
 
 
-# Hapus satu review.
+# Hapus satu review milik user.
 # Mengembalikan True jika ada yang terhapus.
-def delete(object_id):
+def delete(object_id, user_id):
     return (
         get_collection()
-        .delete_one({"_id": object_id})
+        .delete_one({"_id": object_id, "user_id": user_id})
         .deleted_count > 0
     )
 
